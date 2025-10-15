@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Extension Publish - GitHub Action</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .hero-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        z-index: -1;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+
+      header {
+        padding: 2rem 0;
+        text-align: center;
+        color: white;
+      }
+
+      .hero {
+        padding: 4rem 0 6rem;
+        text-align: center;
+        color: white;
+      }
+
+      h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.9));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .tagline {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 2.5rem;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 0.875rem 2rem;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+      }
+
+      .btn-primary {
+        background: white;
+        color: #667eea;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+
+      .btn-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+      }
+
+      .btn-secondary:hover {
+        background: white;
+        color: #667eea;
+      }
+
+      .features-section {
+        background: white;
+        border-radius: 20px 20px 0 0;
+        padding: 5rem 0;
+        margin-top: -2rem;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2.5rem;
+        margin-top: 3rem;
+      }
+
+      .feature {
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      .feature-icon {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 1.5rem;
+        color: white;
+      }
+
+      .feature h3 {
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .feature p {
+        color: #666;
+        line-height: 1.7;
+      }
+
+      .section-title {
+        text-align: center;
+        font-size: 2.5rem;
+        color: #333;
+        margin-bottom: 1rem;
+      }
+
+      .section-subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 1.2rem;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .usage-section {
+        padding: 5rem 0;
+        background: white;
+      }
+
+      .code-block {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 1.5rem;
+        border-radius: 10px;
+        overflow-x: auto;
+        margin-top: 2rem;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        white-space: pre;
+      }
+
+      .code-block .comment {
+        color: #6a9955;
+      }
+
+      .code-block .keyword {
+        color: #c586c0;
+      }
+
+      .code-block .key {
+        color: #9cdcfe;
+      }
+
+      .code-block .value {
+        color: #ce9178;
+      }
+
+      .docs-section {
+        padding: 5rem 0;
+        background: #f8f9fa;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 2rem;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      th {
+        background: #667eea;
+        color: white;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+      }
+
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      tr:hover {
+        background: #f8f9fa;
+      }
+
+      code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.9em;
+        color: #667eea;
+      }
+
+      footer {
+        background: #f8f9fa;
+        padding: 3rem 0;
+        text-align: center;
+        color: #666;
+      }
+
+      footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      footer a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 2.5rem;
+        }
+
+        .tagline {
+          font-size: 1.2rem;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+          gap: 2rem;
+        }
+
+        table {
+          font-size: 0.9rem;
+        }
+
+        th,
+        td {
+          padding: 0.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero-background"></div>
+
+    <header>
+      <div class="container">
+        <nav>
+          <a
+            href="https://github.com/starburst997/code-extension-publish"
+            class="btn btn-secondary"
+          >
+            View on GitHub →
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="container">
+        <h1>Code Extension Publish</h1>
+        <p class="tagline">
+          Build and publish VSCode/Cursor extensions to multiple marketplaces with a single GitHub Action
+        </p>
+      </div>
+    </section>
+
+    <section class="features-section">
+      <div class="container">
+        <h2 class="section-title">Key Features</h2>
+        <p class="section-subtitle">
+          Streamline your extension publishing workflow
+        </p>
+
+        <div class="features">
+          <div class="feature">
+            <div class="feature-icon">🚀</div>
+            <h3>Multi-Marketplace Support</h3>
+            <p>
+              Publish to VSCode Marketplace and Open VSX Registry simultaneously
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3>Platform-Specific Builds</h3>
+            <p>
+              Build for specific platforms like macOS, Linux, and Windows with architecture targeting
+            </p>
+          </div>
+
+          <div class="feature">
+            <div class="feature-icon">⚡</div>
+            <h3>Automated Workflow</h3>
+            <p>
+              Lint, build, package, and publish your extension in one seamless action
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="usage-section">
+      <div class="container">
+        <h2 class="section-title">Quick Start</h2>
+        <p class="section-subtitle">Get started in minutes</p>
+
+        <h3 style="margin-top: 3rem; font-size: 1.8rem; color: #333">
+          Basic Usage
+        </h3>
+        <div class="code-block">- <span class="key">name</span>: <span class="value">Publish Extension</span>
+  <span class="key">uses</span>: <span class="value">starburst997/code-extension-publish@v1</span>
+  <span class="keyword">with</span>:
+    <span class="key">vsce-pat</span>: <span class="value">${{ secrets.VSCE_PAT }}</span>
+    <span class="key">ovsx-pat</span>: <span class="value">${{ secrets.OVSX_PAT }}</span></div>
+
+        <h3 style="margin-top: 3rem; font-size: 1.8rem; color: #333">
+          Platform-Specific Builds
+        </h3>
+        <div class="code-block">- <span class="key">uses</span>: <span class="value">starburst997/code-extension-publish@v1</span>
+  <span class="keyword">with</span>:
+    <span class="key">vsce-pat</span>: <span class="value">${{ secrets.VSCE_PAT }}</span>
+    <span class="key">platforms</span>: <span class="value">"darwin-x64,darwin-arm64,linux-x64,win32-x64"</span></div>
+
+        <h3 style="margin-top: 3rem; font-size: 1.8rem; color: #333">
+          Full Example Workflow
+        </h3>
+        <div class="code-block"><span class="key">name</span>: <span class="value">Publish Extension</span>
+
+<span class="key">on</span>:
+  <span class="key">push</span>:
+    <span class="key">tags</span>:
+      - <span class="value">'v*'</span>
+
+<span class="key">jobs</span>:
+  <span class="key">publish</span>:
+    <span class="key">runs-on</span>: <span class="value">ubuntu-latest</span>
+    <span class="key">steps</span>:
+      - <span class="key">uses</span>: <span class="value">actions/checkout@v4</span>
+
+      - <span class="key">name</span>: <span class="value">Publish to Marketplaces</span>
+        <span class="key">uses</span>: <span class="value">starburst997/code-extension-publish@v1</span>
+        <span class="keyword">with</span>:
+          <span class="key">vsce-pat</span>: <span class="value">${{ secrets.VSCE_PAT }}</span>
+          <span class="key">ovsx-pat</span>: <span class="value">${{ secrets.OVSX_PAT }}</span>
+          <span class="key">platforms</span>: <span class="value">"darwin-x64,darwin-arm64"</span>
+      </div>
+    </section>
+
+    <section class="docs-section">
+      <div class="container">
+        <h2 class="section-title">Configuration</h2>
+        <p class="section-subtitle">All available inputs</p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Input</th>
+              <th>Description</th>
+              <th>Default</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>node-version</code></td>
+              <td>Node.js version to use</td>
+              <td><code>20</code></td>
+            </tr>
+            <tr>
+              <td><code>version</code></td>
+              <td>Version to set in package.json</td>
+              <td><em>(none)</em></td>
+            </tr>
+            <tr>
+              <td><code>lint</code></td>
+              <td>Run lint command before packaging</td>
+              <td><code>true</code></td>
+            </tr>
+            <tr>
+              <td><code>lint-command</code></td>
+              <td>Lint script name from package.json</td>
+              <td><code>lint</code></td>
+            </tr>
+            <tr>
+              <td><code>build-command</code></td>
+              <td>Build script name from package.json</td>
+              <td><code>package-bundle</code></td>
+            </tr>
+            <tr>
+              <td><code>platforms</code></td>
+              <td>Target platforms (comma-separated)</td>
+              <td><em>(all)</em></td>
+            </tr>
+            <tr>
+              <td><code>vsce-pat</code></td>
+              <td>VSCode Marketplace PAT</td>
+              <td><em>(required)</em></td>
+            </tr>
+            <tr>
+              <td><code>ovsx-pat</code></td>
+              <td>Open VSX Registry PAT</td>
+              <td><em>(optional)</em></td>
+            </tr>
+            <tr>
+              <td><code>package-name</code></td>
+              <td>Custom package name for VSIX files</td>
+              <td><em>(auto)</em></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin-top: 3rem; font-size: 1.8rem; color: #333">
+          Supported Platforms
+        </h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Platform</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>darwin-x64</code></td>
+              <td>macOS Intel</td>
+            </tr>
+            <tr>
+              <td><code>darwin-arm64</code></td>
+              <td>macOS Apple Silicon</td>
+            </tr>
+            <tr>
+              <td><code>linux-x64</code></td>
+              <td>Linux 64-bit</td>
+            </tr>
+            <tr>
+              <td><code>linux-arm64</code></td>
+              <td>Linux ARM 64-bit</td>
+            </tr>
+            <tr>
+              <td><code>win32-x64</code></td>
+              <td>Windows 64-bit</td>
+            </tr>
+            <tr>
+              <td><code>win32-arm64</code></td>
+              <td>Windows ARM 64-bit</td>
+            </tr>
+            <tr>
+              <td><code>alpine-x64</code></td>
+              <td>Alpine Linux 64-bit</td>
+            </tr>
+            <tr>
+              <td><code>alpine-arm64</code></td>
+              <td>Alpine Linux ARM 64-bit</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>
+          <a href="https://github.com/starburst997/code-extension-publish">GitHub</a> •
+          <a href="https://github.com/starburst997/code-extension-publish/issues"
+            >Issues</a
+          >
+          •
+          <a href="https://github.com/marketplace/actions/code-extension-publish"
+            >Marketplace</a
+          >
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
