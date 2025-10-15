@@ -1,0 +1,154 @@
+name: 'Code Extension Publish'
+description: 'Build and publish VSCode/Cursor extensions to VSCode Marketplace and Open VSX'
+author: 'JD Boivin'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '20'
+
+  version:
+    description: 'Version to set in package.json (optional, skip if not provided)'
+    required: false
+    default: ''
+
+  lint:
+    description: 'Run lint command before packaging'
+    required: false
+    default: 'true'
+
+  lint-command:
+    description: 'Lint script name from package.json'
+    required: false
+    default: 'lint'
+
+  build-command:
+    description: 'Build/bundle script name from package.json'
+    required: false
+    default: 'package-bundle'
+
+  platforms:
+    description: 'Comma-separated list of target platforms (e.g., darwin-x64,darwin-arm64,linux-x64,win32-x64)'
+    required: false
+    default: ''
+
+  vsce-pat:
+    description: 'Personal Access Token for VSCode Marketplace'
+    required: false
+    default: ''
+
+  ovsx-pat:
+    description: 'Personal Access Token for Open VSX'
+    required: false
+    default: ''
+
+  package-name:
+    description: 'Custom package name for the VSIX files (optional)'
+    required: false
+    default: ''
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      shell: bash
+      run: npm ci --force
+
+    - name: Update package version
+      if: inputs.version != ''
+      shell: bash
+      run: npm version ${{ inputs.version }} --no-git-tag-version
+
+    - name: Run lint
+      if: inputs.lint == 'true'
+      shell: bash
+      run: npm run ${{ inputs.lint-command }}
+
+    - name: Build extension
+      if: inputs.build-command != ''
+      shell: bash
+      run: npm run ${{ inputs.build-command }}
+
+    # Package and publish to VSCode Marketplace
+    - name: Install vsce
+      if: inputs.vsce-pat != ''
+      shell: bash
+      run: npm install -g @vscode/vsce
+
+    - name: Package for VSCode Marketplace (no platforms)
+      if: inputs.vsce-pat != '' && inputs.platforms == ''
+      shell: bash
+      run: |
+        if [[ -n "${{ inputs.package-name }}" ]]; then
+          vsce package -o "${{ inputs.package-name }}.vsix"
+        else
+          vsce package
+        fi
+
+    - name: Package for VSCode Marketplace (with platforms)
+      if: inputs.vsce-pat != '' && inputs.platforms != ''
+      shell: bash
+      run: |
+        IFS=',' read -ra PLATFORMS <<< "${{ inputs.platforms }}"
+        for platform in "${PLATFORMS[@]}"; do
+          platform=$(echo "$platform" | xargs)  # Trim whitespace
+          echo "Packaging for platform: $platform"
+          if [[ -n "${{ inputs.package-name }}" ]]; then
+            vsce package --target "$platform" -o "${{ inputs.package-name }}-$platform.vsix"
+          else
+            vsce package --target "$platform"
+          fi
+        done
+
+    - name: Publish to VSCode Marketplace (no platforms)
+      if: inputs.vsce-pat != '' && inputs.platforms == ''
+      shell: bash
+      env:
+        VSCE_PAT: ${{ inputs.vsce-pat }}
+      run: vsce publish
+
+    - name: Publish to VSCode Marketplace (with platforms)
+      if: inputs.vsce-pat != '' && inputs.platforms != ''
+      shell: bash
+      env:
+        VSCE_PAT: ${{ inputs.vsce-pat }}
+      run: |
+        IFS=',' read -ra PLATFORMS <<< "${{ inputs.platforms }}"
+        for platform in "${PLATFORMS[@]}"; do
+          platform=$(echo "$platform" | xargs)  # Trim whitespace
+          echo "Publishing to VSCode Marketplace for platform: $platform"
+          vsce publish --target "$platform"
+        done
+
+    # Package and publish to Open VSX
+    - name: Install ovsx
+      if: inputs.ovsx-pat != ''
+      shell: bash
+      run: npm install -g ovsx
+
+    - name: Publish to Open VSX (no platforms)
+      if: inputs.ovsx-pat != '' && inputs.platforms == ''
+      shell: bash
+      run: ovsx publish -p ${{ inputs.ovsx-pat }}
+
+    - name: Publish to Open VSX (with platforms)
+      if: inputs.ovsx-pat != '' && inputs.platforms != ''
+      shell: bash
+      run: |
+        IFS=',' read -ra PLATFORMS <<< "${{ inputs.platforms }}"
+        for platform in "${PLATFORMS[@]}"; do
+          platform=$(echo "$platform" | xargs)  # Trim whitespace
+          echo "Publishing to Open VSX for platform: $platform"
+          ovsx publish -p ${{ inputs.ovsx-pat }} --target "$platform"
+        done
+
+branding:
+  icon: 'package'
+  color: 'blue'
