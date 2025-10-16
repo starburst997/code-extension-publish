@@ -1,61 +1,61 @@
-name: 'Code Extension Publish'
-description: 'Build and publish VSCode/Cursor extensions to VSCode Marketplace and Open VSX'
-author: 'JD Boivin'
+name: "Code Extension Publish"
+description: "Build and publish VSCode/Cursor extensions to VSCode Marketplace and Open VSX"
+author: "JD Boivin"
 
 inputs:
   node-version:
-    description: 'Node.js version to use'
+    description: "Node.js version to use"
     required: false
-    default: '20'
+    default: "20"
 
   version:
-    description: 'Version to set in package.json (optional, skip if not provided)'
+    description: "Version to set in package.json (optional, skip if not provided)"
     required: false
-    default: ''
+    default: ""
 
   lint:
-    description: 'Run lint command before packaging'
+    description: "Run lint command before packaging"
     required: false
-    default: 'true'
+    default: "true"
 
   lint-command:
-    description: 'Lint script name from package.json'
+    description: "Lint script name from package.json"
     required: false
-    default: 'lint'
+    default: "lint"
 
   build-command:
-    description: 'Build/bundle script name from package.json'
+    description: "Build/bundle script name from package.json"
     required: false
-    default: 'package-bundle'
+    default: "build"
 
   platforms:
-    description: 'Comma-separated list of target platforms (e.g., darwin-x64,darwin-arm64,linux-x64,win32-x64)'
+    description: "Comma-separated list of target platforms (e.g., darwin-x64,darwin-arm64,linux-x64,win32-x64)"
     required: false
-    default: ''
+    default: ""
 
   vsce-pat:
-    description: 'Personal Access Token for VSCode Marketplace'
+    description: "Personal Access Token for VSCode Marketplace"
     required: false
-    default: ''
+    default: ""
 
   ovsx-pat:
-    description: 'Personal Access Token for Open VSX'
+    description: "Personal Access Token for Open VSX"
     required: false
-    default: ''
+    default: ""
 
   package-name:
-    description: 'Custom package name for the VSIX files (optional)'
+    description: "Custom package name for the VSIX files (optional)"
     required: false
-    default: ''
+    default: ""
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        cache: 'npm'
+        cache: "npm"
 
     - name: Install dependencies
       shell: bash
@@ -69,12 +69,25 @@ runs:
     - name: Run lint
       if: inputs.lint == 'true'
       shell: bash
-      run: npm run ${{ inputs.lint-command }}
+      run: |
+        if grep -q "\"${{ inputs.lint-command }}\":" package.json 2>/dev/null; then
+          echo "Running lint command: ${{ inputs.lint-command }}"
+          npm run ${{ inputs.lint-command }}
+        else
+          echo "Lint command '${{ inputs.lint-command }}' not found in package.json, skipping..."
+        fi
 
     - name: Build extension
-      if: inputs.build-command != ''
       shell: bash
-      run: npm run ${{ inputs.build-command }}
+      run: |
+        if [ -n "${{ inputs.build-command }}" ] && grep -q "\"${{ inputs.build-command }}\":" package.json 2>/dev/null; then
+          echo "Running build command: ${{ inputs.build-command }}"
+          npm run ${{ inputs.build-command }}
+        elif [ -n "${{ inputs.build-command }}" ]; then
+          echo "Build command '${{ inputs.build-command }}' not found in package.json, skipping..."
+        else
+          echo "No build command specified, skipping..."
+        fi
 
     # Package and publish to VSCode Marketplace
     - name: Install vsce
@@ -150,5 +163,5 @@ runs:
         done
 
 branding:
-  icon: 'package'
-  color: 'blue'
+  icon: "package"
+  color: "blue"
